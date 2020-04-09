@@ -1,0 +1,486 @@
+#! /bin/bash
+
+# Make executable
+# chmod u+x prosemirror.setup
+
+# Run
+# ./prosemirror.setup
+
+# Prompt
+echo "- Script to setup ProseMirror basic example (NPM and GIT required) ---"
+echo "Directory name:"
+read dirname
+if [ -e $dirname ]; then
+  echo "Directory $dirname already exists!"
+else
+	# Setup
+	echo "Setting up " $dirname	
+	
+	# Create project dir
+	mkdir $dirname
+	cd $dirname
+
+	# Create package
+	package='{\n
+\t"name": "myproject",\n
+\t"description": "Build process of myproject",\n
+\t"author": "me",\n
+\t"version": "1.0.0",\n
+\t"license": "ISC",\n
+\t"repository": {},\n
+\t"scripts": {\n
+\t\t"build-all": "npm --prefix pm_modules/prosemirror-model/ run build && npm --prefix pm_modules/prosemirror-state/ run build && npm --prefix pm_modules/prosemirror-transform/ run build && npm --prefix pm_modules/prosemirror-view/ run build && npm --prefix pm_modules/prosemirror-commands/ run build && npm --prefix pm_modules/prosemirror-schema-list/ run build && npm --prefix pm_modules/prosemirror-history/ run build && npm --prefix pm_modules/prosemirror-keymap/ run build && npm --prefix pm_modules/prosemirror-inputrules/ run build && npm --prefix pm_modules/prosemirror-gapcursor/ run build && npm --prefix pm_modules/prosemirror-dropcursor/ run build && npm --prefix pm_modules/w3c-keyname/ run build && npm --prefix pm_modules/rope-sequence/ run build && npm --prefix pm_modules/prosemirror-menu/ run build && npm --prefix pm_modules/orderedmap/ run build && npm --prefix pm_modules/crelt/ run prepare && npm --prefix pm_modules/prosemirror-schema-basic/ run build && npm --prefix pm_modules/prosemirror-example-setup/ run build && rollup -c rollup.config.js",\n
+\t\t"build-me": "rollup -c rollup.config.js"\n
+\t}\n
+}'
+	echo -e $package > package.json
+
+	# Create config
+	config='
+import resolve from "@rollup/plugin-node-resolve";\n
+import commonjs from "@rollup/plugin-commonjs";\n
+import {terser} from "rollup-plugin-terser";\n
+\n
+export default {\n
+\tinput: "./src/pm.js",\n
+\toutput: {\n
+\t\tfile: "./dist/pm.js",\n
+\t\tformat: "iife",\n
+\t\tname: "pm",\n
+\t\tsourcemap: false\n
+\t},\n
+\tplugins: [\n
+\t\tcommonjs(),\n
+\t\trequire("@rollup/plugin-buble")(),\n
+\t\tterser(),\n
+\t\tresolve({\n
+\t\t\tcustomResolveOptions: {\n
+\t\t\t\tmoduleDirectory: "./pm_modules"\n
+\t\t\t},\n
+\t\t\tbrowser: true\n
+\t\t}),\n
+\t]\n
+};'
+	echo -e $config > rollup.config.js
+
+
+	# Create src
+	src='
+import {EditorState} from "prosemirror-state"\n
+import {EditorView} from "prosemirror-view"\n
+import {Schema, DOMParser} from "prosemirror-model"\n
+import {schema} from "prosemirror-schema-basic"\n
+import {addListNodes} from "prosemirror-schema-list"\n
+import {exampleSetup} from "prosemirror-example-setup"\n
+\n
+function create() {\n
+\n
+\t// Mix the nodes from prosemirror-schema-list into the basic schema to\n
+\t// create a schema with list support.\n
+\tconst mySchema = new Schema({\n
+\t\tnodes: addListNodes(schema.spec.nodes, "paragraph block*", "block"),\n
+\t\tmarks: schema.spec.marks\n
+\t})\n
+\n
+\twindow.view = new EditorView(document.querySelector("#editor"), {\n
+\t\tstate: EditorState.create({\n
+\t\t\tdoc: DOMParser.fromSchema(mySchema).parse(document.querySelector("#content")),\n
+\t\t\tplugins: exampleSetup({schema: mySchema})\n
+\t\t})\n
+\t})\n
+\n
+}\n
+\n
+export default {\n
+\tcreate\n
+}'
+	mkdir src
+	cd src
+	echo -e $src > pm.js
+
+
+	# Create style
+	style='
+.ProseMirror {\n
+\tposition: relative;\n
+}\n
+.ProseMirror {\n
+\tword-wrap: break-word;\n
+\twhite-space: pre-wrap;\n
+\t-webkit-font-variant-ligatures: none;\n
+\tfont-variant-ligatures: none;\n
+}\n
+.ProseMirror pre {\n
+\twhite-space: pre-wrap;\n
+}\n
+.ProseMirror li {\n
+\tposition: relative;\n
+}\n
+.ProseMirror-hideselection *::selection {\n
+\tbackground: transparent;\n
+}\n
+.ProseMirror-hideselection *::-moz-selection {\n
+\tbackground: transparent;\n
+}\n
+.ProseMirror-hideselection {\n
+\tcaret-color: transparent;\n
+}\n
+.ProseMirror-selectednode {\n
+\toutline: 2px solid #8cf;\n
+}\n/* Make sure li selections wrap around markers */\n
+li.ProseMirror-selectednode {\n
+\toutline: none;\n
+}\n
+li.ProseMirror-selectednode:after {\n
+\tcontent: "";\n
+\tposition: absolute;\n
+\tleft: -32px;\n
+\tright: -2px;\n
+\ttop: -2px;\n
+\tbottom: -2px;\n
+\tborder: 2px solid #8cf;\n
+\tpointer-events: none;\n
+}\n
+.ProseMirror-textblock-dropdown {\n
+\tmin-width: 3em;\n
+}\n
+.ProseMirror-menu {\n
+\tmargin: 0 -4px;\n
+\tline-height: 1;\n
+}\n
+.ProseMirror-tooltip .ProseMirror-menu {\n
+\twidth: -webkit-fit-content;\n
+\twidth: fit-content;\n
+\twhite-space: pre;\n
+}\n
+.ProseMirror-menuitem {\n
+\tmargin-right: 3px;\n
+\tdisplay: inline-block;\n
+}\n
+.ProseMirror-menuseparator {\n
+\tborder-right: 1px solid #ddd;\n
+\tmargin-right: 3px;\n
+}\n
+.ProseMirror-menu-dropdown,\n
+.ProseMirror-menu-dropdown-menu {\n
+\tfont-size: 90%;\n
+\twhite-space: nowrap;\n
+}\n
+.ProseMirror-menu-dropdown {\n
+\tvertical-align: 1px;\n
+\tcursor: pointer;\n
+\tposition: relative;\n
+\tpadding-right: 15px;\n
+}\n
+.ProseMirror-menu-dropdown-wrap {\n
+\tpadding: 1px 0 1px 4px;\n
+\tdisplay: inline-block;\n
+\tposition: relative;\n
+}\n
+.ProseMirror-menu-dropdown:after {\n
+\tcontent: "";\n
+\tborder-left: 4px solid transparent;\n
+\tborder-right: 4px solid transparent;\n
+\tborder-top: 4px solid currentColor;\n
+\topacity: 0.6;\n
+\tposition: absolute;\n
+\tright: 4px;\n
+\ttop: calc(50% - 2px);\n
+}\n
+.ProseMirror-menu-dropdown-menu,\n
+.ProseMirror-menu-submenu {\n
+\tposition: absolute;\n
+\tbackground: white;\n
+\tcolor: #666;\n
+\tborder: 1px solid #aaa;\n
+\tpadding: 2px;\n
+}\n
+.ProseMirror-menu-dropdown-menu {\n
+\tz-index: 15;\n
+\tmin-width: 6em;\n
+}\n
+.ProseMirror-menu-dropdown-item {\n
+\tcursor: pointer;\n
+\tpadding: 2px 8px 2px 4px;\n
+}\n
+.ProseMirror-menu-dropdown-item:hover {\n
+\tbackground: #f2f2f2;\n
+}\n
+.ProseMirror-menu-submenu-wrap {\n
+\tposition: relative;\n
+\tmargin-right: -4px;\n
+}\n
+.ProseMirror-menu-submenu-label:after {\n
+\tcontent: "";\n
+\tborder-top: 4px solid transparent;\n
+\tborder-bottom: 4px solid transparent;\n
+\tborder-left: 4px solid currentColor;\n
+\topacity: 0.6;\n
+\tposition: absolute;\n
+\tright: 4px;\n
+\ttop: calc(50% - 4px);\n
+}\n
+.ProseMirror-menu-submenu {\n
+\tdisplay: none;\n
+\tmin-width: 4em;\n
+\tleft: 100%;\n
+\ttop: -3px;\n
+}\n
+.ProseMirror-menu-active {\n
+\tbackground: #eee;\n
+\tborder-radius: 4px;\n
+}\n
+.ProseMirror-menu-active {\n
+\tbackground: #eee;\n
+\tborder-radius: 4px;\n
+}\n
+.ProseMirror-menu-disabled {\n
+\topacity: 0.3;\n
+}\n
+.ProseMirror-menu-submenu-wrap:hover .ProseMirror-menu-submenu,\n
+.ProseMirror-menu-submenu-wrap-active .ProseMirror-menu-submenu {\n
+\tdisplay: block;\n
+}\n
+.ProseMirror-menubar {\n
+\tborder-top-left-radius: inherit;\n
+\tborder-top-right-radius: inherit;\n
+\tposition: relative;\n
+\tmin-height: 1em;\n
+\tcolor: #666;\n
+\tpadding: 1px 6px;\n
+\ttop: 0;\n
+\tleft: 0;\n
+\tright: 0;\n
+\tborder-bottom: 1px solid silver;\n
+\tbackground: white;\n
+\tz-index: 10;\n
+\t-moz-box-sizing: border-box;\n
+\tbox-sizing: border-box;\n
+\toverflow: visible;\n
+}\n
+.ProseMirror-icon {\n
+\tdisplay: inline-block;\n
+\tline-height: 0.8;\n
+\tvertical-align: -2px;\n\t/* Compensate for padding */\n
+\tpadding: 2px 8px;\n
+\tcursor: pointer;\n
+}\n
+.ProseMirror-menu-disabled.ProseMirror-icon {\n
+\tcursor: default;\n
+}\n
+.ProseMirror-icon svg {\n
+\tfill: currentColor;\n
+\theight: 1em;\n
+}\n
+.ProseMirror-icon span {\n
+\tvertical-align: text-top;\n
+}\n
+.ProseMirror-gapcursor {\n
+\tdisplay: none;\n
+\tpointer-events: none;\n
+\tposition: absolute;\n
+}\n
+.ProseMirror-gapcursor:after {\n
+\tcontent: "";\n
+\tdisplay: block;\n
+\tposition: absolute;\n
+\ttop: -2px;\n
+\twidth: 20px;\n
+\tborder-top: 1px solid black;\n
+\tanimation: ProseMirror-cursor-blink 1.1s steps(2, start) infinite;\n
+}\n
+@keyframes ProseMirror-cursor-blink {\n
+\tto {\n
+\t\tvisibility: hidden;\n
+\t}\n
+}\n
+.ProseMirror-focused .ProseMirror-gapcursor {\n
+\tdisplay: block;\n
+}\n/* Add space around the hr to make clicking it easier */\n
+.ProseMirror-example-setup-style hr {\n
+\tpadding: 2px 10px;\n
+\tborder: none;\n
+\tmargin: 1em 0;\n
+}\n
+.ProseMirror-example-setup-style hr:after {\n
+\tcontent: "";\n
+\tdisplay: block;\n
+\theight: 1px;\n
+\tbackground-color: silver;\n
+\tline-height: 2px;\n
+}\n
+.ProseMirror ul,\n
+.ProseMirror ol {\n
+\tpadding-left: 30px;\n
+}\n
+.ProseMirror blockquote {\n
+\tpadding-left: 1em;\n
+\tborder-left: 3px solid #eee;\n
+\tmargin-left: 0;\n
+\tmargin-right: 0;\n
+}\n
+.ProseMirror-example-setup-style img {\n
+\tcursor: default;\n
+}\n
+.ProseMirror-prompt {\n
+\tbackground: white;\n
+\tpadding: 5px 10px 5px 15px;\n
+\tborder: 1px solid silver;\n
+\tposition: fixed;\n
+\tborder-radius: 3px;\n
+\tz-index: 11;\n
+\tbox-shadow: -0.5px 2px 5px rgba(0, 0, 0, 0.2);\n
+}\n
+.ProseMirror-prompt h5 {\n
+\tmargin: 0;\n
+\tfont-weight: normal;\n
+\tfont-size: 100%;\n
+\tcolor: #444;\n
+}\n
+.ProseMirror-prompt input[type="text"],\n
+.ProseMirror-prompt textarea {\n
+\tbackground: #eee;\n
+\tborder: none;\n
+\toutline: none;\n
+}\n
+.ProseMirror-prompt input[type="text"] {\n
+\tpadding: 0 4px;\n
+}\n
+.ProseMirror-prompt-close {\n
+\tposition: absolute;\n
+\tleft: 2px;\n
+\ttop: 1px;\n
+\tcolor: #666;\n
+\tborder: none;\n
+\tbackground: transparent;\n
+\tpadding: 0;\n
+}\n
+.ProseMirror-prompt-close:after {\n
+\tcontent: "âœ•";\n
+\tfont-size: 12px;\n
+}\n
+.ProseMirror-invalid {\n
+\tbackground: #ffc;\n
+\tborder: 1px solid #cc7;\n
+\tborder-radius: 4px;\n
+\tpadding: 5px 10px;\n
+\tposition: absolute;\n
+\tmin-width: 10em;\n
+}\n
+.ProseMirror-prompt-buttons {\n
+\tmargin-top: 5px;\n
+\tdisplay: none;\n
+}\n
+#editor,\n
+.editor {\n
+\tbackground: white;\n
+\tcolor: black;\n
+\tbackground-clip: padding-box;\n
+\tborder-radius: 4px;\n
+\tborder: 2px solid rgba(0, 0, 0, 0.2);\n
+\tpadding: 5px 0;\n
+\tmargin-bottom: 23px;\n
+}\n
+.ProseMirror p:first-child,\n
+.ProseMirror h1:first-child,\n
+.ProseMirror h2:first-child,\n
+.ProseMirror h3:first-child,\n
+.ProseMirror h4:first-child,\n
+.ProseMirror h5:first-child,\n
+.ProseMirror h6:first-child {\n
+\tmargin-top: 10px;\n
+}\n
+.ProseMirror {\n
+\tpadding: 4px 8px 4px 14px;\n
+\tline-height: 1.2;\n
+\toutline: none;\n
+}\n
+.ProseMirror p {\n
+\tmargin-bottom: 1em;\n
+}'
+
+	cd ..
+	mkdir dist
+	cd dist
+	echo -e $style > pm.css
+
+
+	#Create HTML
+	html='
+<!doctype html>\n
+<html lang="en-US">\n
+<head>\n
+\t<meta charset="utf8">\n
+\t<link rel="stylesheet" href="pm.css">\n
+</head>\n
+<body>\n
+\t<div id="editor" style="margin-bottom: 23px"></div>\n
+\t<div style="display: none" id="content">\n
+\t\t<h3>Hello ProseMirror</h3>\n
+\t\t<p>This is editable text. You can focus it and start typing.</p>\n
+\t\t<p>To apply styling, you can select a piece of text and manipulate\n
+\t\tits styling from the menu. The basic schema\n
+\t\tsupports <em>emphasis</em>, <strong>strong\n
+\t\ttext</strong>, <a href="http://marijnhaverbeke.nl/blog">links</a>, <code>code\n
+\t\tfont</code>, and <img src="//prosemirror.net/img/smiley.png"> images.</p>\n
+\t\t<p>Block-level structure can be manipulated with key bindings (try\n
+\t\tctrl-shift-2 to create a level 2 heading, or enter in an empty\n
+\t\ttextblock to exit the parent block), or through the menu.</p>\n
+\t\t<p>Try using the “list” item in the menu to wrap this paragraph in\n
+\t\ta numbered list.</p>\n
+\t</div>\n
+\n
+\t<script type="text/javascript" src="pm.js"></script>\n
+\t<script>\n
+\t\tpm.create();\n
+\t</script>\n
+</body>\n
+</html>'
+
+	echo -e $html > index.html
+
+	# Rollup (local)
+	cd ..
+	npm install rollup --save-dev
+	npm install --save-dev acorn@^6.0.0
+	npm install --save-dev rollup@^1.20.0
+	npm install --save-dev @rollup/plugin-buble
+	npm install --save-dev rollup-plugin-commonjs
+	npm install --save-dev @rollup/plugin-commonjs
+	npm install --save-dev @rollup/plugin-node-resolve
+	npm install --save-dev rollup-plugin-terser
+
+
+	# ProseMirror 
+	mkdir pm_modules
+	cd pm_modules
+	git clone git@github.com:ProseMirror/prosemirror-model.git
+	git clone git@github.com:ProseMirror/prosemirror-state.git
+	git clone git@github.com:ProseMirror/prosemirror-transform.git
+	git clone git@github.com:ProseMirror/prosemirror-view.git
+	git clone git@github.com:ProseMirror/prosemirror-commands.git
+	git clone git@github.com:ProseMirror/prosemirror-schema-basic.git
+	git clone git@github.com:ProseMirror/prosemirror-schema-list.git
+	git clone git@github.com:ProseMirror/prosemirror-history.git
+	git clone git@github.com:ProseMirror/prosemirror-keymap.git
+	git clone git@github.com:ProseMirror/prosemirror-inputrules.git
+	git clone git@github.com:ProseMirror/prosemirror-gapcursor.git
+	git clone git@github.com:ProseMirror/prosemirror-example-setup.git
+	git clone git@github.com:ProseMirror/prosemirror-dropcursor.git
+	git clone git@github.com:marijnh/w3c-keyname.git
+	git clone git@github.com:marijnh/rope-sequence.git
+	git clone git@github.com:ProseMirror/prosemirror-menu.git
+	git clone git@github.com:marijnh/orderedmap.git
+	git clone git@github.com:marijnh/crelt.git
+
+	#Build
+	cd ..
+	npm run build-all
+
+	#Info
+	echo 'Open '$dirname'/dist/index.html in web browser.'
+
+fi
+
+# Done
+exit 1
