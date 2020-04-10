@@ -1,4 +1,6 @@
 #! /bin/bash
+set -e
+# Any subsequent(*) commands which fail will cause the shell script to exit immediately
 
 # Make executable
 # chmod u+x prosemirror.setup
@@ -7,15 +9,19 @@
 # ./prosemirror.setup
 
 # Prompt
-echo "- Script to setup ProseMirror basic example (NPM and GIT required) ---"
-echo "Directory name:"
-read dirname
+echo "--------------------------------"
+echo "--- Script to setup ProseMirror basic example (NPM and GIT required) ---"
+echo "--------------------------------"
+read -p "Directory name: " dirname
+echo "--------------------------------"
 if [ -e $dirname ]; then
-  echo "Directory $dirname already exists!"
+  echo "Directory "$dirname" already exists."
+  echo "--------------------------------"
 else
 	# Setup
 	echo "Setting up " $dirname	
-	
+	echo "--------------------------------"
+
 	# Create project dir
 	mkdir $dirname
 	cd $dirname
@@ -473,12 +479,66 @@ li.ProseMirror-selectednode:after {\n
 	git clone git@github.com:marijnh/orderedmap.git
 	git clone git@github.com:marijnh/crelt.git
 
-	#Build
+	#Create Build script
+	build='
+#! /bin/bash
+\nset -e
+\n# Any subsequent(*) commands which fail will cause the shell script to exit immediately
+\n
+\n# Make executable
+\n# chmod u+x dist.build
+\n
+\n# Run
+\n# ./dist.build
+\n
+\n# Prompt
+\necho "--------------------------------"
+\necho "Build IIFE dist (js) file"
+\necho "--------------------------------"
+\necho "1. Build (wrapper)"
+\necho "2. Build (all)"
+\necho "--------------------------------"
+\nread -p "Select Script: " option
+\necho "--------------------------------"
+\n
+\n# Build
+\ncase $option in
+\n\t1)
+\n\t\techo "Building wrapper..."
+\n\t\techo "--------------------------------"
+\n\t\tnpm run build-me
+\n\t;;
+\n\t2) 
+\n\techo "Building all..."
+\n\t\techo "--------------------------------"
+\n\t\tnpm run build-all
+\n\t;;
+\n\t*)
+\n\t\techo "Invalid option..."
+\n\t;;
+\nesac
+\n
+\n# Done
+\necho "--------------------------------"
+\necho "COMPLETED"
+\necho "--------------------------------"	
+\nexit 1'
+
 	cd ..
+	echo -e $build > dist.build
+	chmod u+x dist.build
+	
+
+	# Build
 	npm run build-all
 
 	#Info
+	echo "--------------------------------"
+	echo "COMPLETED"
+	echo "--------------------------------"
 	echo 'Open '$dirname'/dist/index.html in web browser.'
+	echo 'To rebuild IIFE dist (js) file, run ./dist.build at '$dirname' directory.'
+	echo "--------------------------------"
 
 fi
 
