@@ -28,8 +28,8 @@ else
 
 	# Create package
 	package='{
-\n\t"name": "myproject",
-\n\t"description": "Build process of myproject",
+\n\t"name": "'$dirname'",
+\n\t"description": "Build process of '$dirname'",
 \n\t"author": "me",
 \n\t"version": "1.0.0",
 \n\t"license": "ISC",
@@ -456,30 +456,31 @@ else
 	npm install --save-dev rollup-plugin-commonjs
 	npm install --save-dev @rollup/plugin-commonjs
 	npm install --save-dev @rollup/plugin-node-resolve
+	npm install --save-dev @rollup/plugin-replace
 	npm install --save-dev rollup-plugin-terser
 
 
 	# ProseMirror 
 	mkdir pm_modules
 	cd pm_modules
-	git clone git@github.com:ProseMirror/prosemirror-model.git
-	git clone git@github.com:ProseMirror/prosemirror-state.git
-	git clone git@github.com:ProseMirror/prosemirror-transform.git
-	git clone git@github.com:ProseMirror/prosemirror-view.git
-	git clone git@github.com:ProseMirror/prosemirror-commands.git
-	git clone git@github.com:ProseMirror/prosemirror-schema-basic.git
-	git clone git@github.com:ProseMirror/prosemirror-schema-list.git
-	git clone git@github.com:ProseMirror/prosemirror-history.git
-	git clone git@github.com:ProseMirror/prosemirror-keymap.git
-	git clone git@github.com:ProseMirror/prosemirror-inputrules.git
-	git clone git@github.com:ProseMirror/prosemirror-gapcursor.git
-	git clone git@github.com:ProseMirror/prosemirror-example-setup.git
-	git clone git@github.com:ProseMirror/prosemirror-dropcursor.git
-	git clone git@github.com:marijnh/w3c-keyname.git
-	git clone git@github.com:marijnh/rope-sequence.git
-	git clone git@github.com:ProseMirror/prosemirror-menu.git
-	git clone git@github.com:marijnh/orderedmap.git
-	git clone git@github.com:marijnh/crelt.git
+	git clone https://github.com/ProseMirror/prosemirror-model.git
+	git clone https://github.com/ProseMirror/prosemirror-state.git
+	git clone https://github.com/ProseMirror/prosemirror-transform.git
+	git clone https://github.com/ProseMirror/prosemirror-view.git
+	git clone https://github.com/ProseMirror/prosemirror-commands.git
+	git clone https://github.com/ProseMirror/prosemirror-schema-basic.git
+	git clone https://github.com/ProseMirror/prosemirror-schema-list.git
+	git clone https://github.com/ProseMirror/prosemirror-history.git
+	git clone https://github.com/ProseMirror/prosemirror-keymap.git
+	git clone https://github.com/ProseMirror/prosemirror-inputrules.git
+	git clone https://github.com/ProseMirror/prosemirror-gapcursor.git
+	git clone https://github.com/ProseMirror/prosemirror-example-setup.git
+	git clone https://github.com/ProseMirror/prosemirror-dropcursor.git
+	git clone https://github.com/marijnh/w3c-keyname.git
+	git clone https://github.com/marijnh/rope-sequence.git
+	git clone https://github.com/ProseMirror/prosemirror-menu.git
+	git clone https://github.com/marijnh/orderedmap.git
+	git clone https://github.com/marijnh/crelt.git
 
 	#Create Build script
 	build='#! /bin/bash
